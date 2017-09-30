@@ -20,7 +20,8 @@ On the bottom of Parser.py, the main function is defined with several variables 
 
 1. jsonFile should be the file location of the json file to be parsed and fed into the database. The json parser is specifically tuned to 
      the format of Open Academic Graph files found at https://www.openacademic.ai/oag/. The software was tested on these, and it is 
-     recommended any user try a smaller dataset, such as the ones found in mag_papers_8.zip, before attempting one of the larger sets.
+     recommended any user try a smaller dataset, such as mag_papers_166.txt found in mag_papers_8.zip, before attempting one of the larger
+     sets.
      
 2. mark should be set to the string marking which will be placed on marked nodes. This is entirely for visual purposes, and will not have
      any effect on execution
