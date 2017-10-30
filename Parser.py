@@ -19,24 +19,22 @@ class Parser():
                 #parse json from line
                 timer = time.time()
                 publish_item = json.loads(line)
-                print("   Parsed json line in ", timer - time.time())
+                #print("   Parsed json line in ", timer - time.time())
 
                 #get list of names from json object
                 coauthors = []
                 for author in publish_item['authors']:
                     coauthors.append(author['name'])
 
+                #clean the author set to remove invalid characters
                 coauthors = self.cleanAuthors(coauthors)
 
                 #if one author is not found in graph, add them.
                 for author in coauthors:
-
                     #we don't need to check if this node exists because add author uses merge
-                    #if self.graph.checkNodeExists(author) == False:
-
                     timer = time.time()
                     self.graph.addAuthor(author)
-                    print("   Added author to database in ", timer - time.time())
+                    #print("   Added author to database in ", timer - time.time())
 
                 #add edges: For each combination of authors, add the edge. Function automatically adds one to edge if it already exists
                 for i, j in itertools.combinations(coauthors, 2):
@@ -45,12 +43,16 @@ class Parser():
                     else:
                         timer = time.time()
                         self.graph.addEdge(i,j)
-                        print("   Added edge to database in ", timer - time.time())
+                        #print("   Added edge to database in ", timer - time.time())
 
                 num_publications += 1
-                print("Completed Line ", str(num_publications))
+                #print("Completed Line ", str(num_publications))
+                if num_publications == 100:
+                    break
 
+        return self.graph
 
+    @staticmethod
     def viewFile(filepath):
         with open(filepath) as f:
             for line in f:
@@ -59,6 +61,7 @@ class Parser():
     def resetGraph(self):
         self.graph.clearGraph()
 
+    @staticmethod
     def cleanAuthors(authors):
         toreturn = []
         #for each author
@@ -71,46 +74,76 @@ class Parser():
             toreturn.append(cleaned_author)
         return toreturn
 
-    def getRandomNodes(self, count:int):
-        author_list = self.graph.getAllAuthors()
-        author_pairs = random.sample(author_list, count)
-        toreturn = [x[0] for x in author_pairs]
+"""Function for seeing how many venues existed in the file. Just for 
+testing purposes."""
+def getNumberOfVenues(filepath: str):
+    with open(filepath, "r") as f:
+        # track number of publications parsed
+        num_venues = 0
+        unknown_venue = 0
+        venueList = []
 
-        return toreturn
+        for line in f:
+            publish_item = json.loads(line)
 
-    def markNodes(self, nodes, mark):
-        for node in nodes:
-            self.graph.markNode(node, mark)
+            try:
+                this_venue = publish_item['venue']
 
-    def getMarkedNodes(self, mark:str):
-        return self.graph.getMarkedNodes(mark)
+                if not this_venue in venueList:
+                    num_venues += 1
+                    venueList.append(this_venue)
 
+                if num_venues % 1000 == 0:
+                    print("Reached " + str(num_venues) + " venues")
+            except:
+                unknown_venue += 1
 
-def main():
-    connectionString = "bolt://localhost:7687"
-    parser = Parser(connectionString)
+                if unknown_venue % 1000 == 0:
+                    print("Reached " + str(num_venues) + " unknown venues")
 
-    jsonFile = "C:\\Users\\crosl\\OneDrive\\School\\ASU\\Fall 2017\\CSE 575\\Term Project\\Dataset\\mag_papers_166.txt"
-    parser.parseFile(jsonFile)
+        #print("Total number of Venues: " + str(num_venues))
+        #print("Total number of unknown Venues: " + str(unknown_venue))
 
-    #Change this to specify a mark to use. This means there could exist multiple marks at once
+"""Tests the marking functionality. Just for testing purposes."""
+def test_mark(graph):
+    # Change this to specify a mark to use. This means there could exist multiple marks at once
     mark = "marked"
 
-    #Use this to specify the nodes to mark by author name manually
-    nodesToMark = ["Conner Gh", ""]
-    #use this to generate random nodes to mark
-    numberOfNodesToMark = 4
-    nodes = parser.getRandomNodes(numberOfNodesToMark)
+    # A. Use this to specify the nodes to mark by author name manually
+    # nodesToMark = ["Conner Gh", ""]
+    # B. use this to generate random nodes to mark
+    numberOfNodesToMark = 10
+    nodes = graph.getRandomNodes(numberOfNodesToMark)
 
-    #mark nodes
-    parser.markNodes(nodes, mark)
+    # If marked nodes couldn't be generated, return
+    if nodes == None:
+        return
 
-    #retrive marked nodes (TEST)
-    nodes = parser.getMarkedNodes(mark)
+    # mark nodes
+    graph.markNodes(nodes, mark)
 
-    #clear graph
-    parser.resetGraph()
+    # retrieve marked nodes (TEST)
+    nodes = graph.getMarkedNodes(mark)
 
+    # get all edges off marked nodes
+    test = graph.getEdgesOffNodes(nodes)
+
+    print[test]
+
+def main():
+    # Connection string for Neo4j Database
+    connectionString = "bolt://10.152.38.62:7687"
+
+    # UNCOMMENT THIS SECTION TO READ IN FROM FILE
+    """parser = Parser(connectionString)
+    jsonFile = "C:\\Users\\crosl\\OneDrive\\School\\ASU\\Fall 2017\\CSE 575\\Term Project\\Dataset\\mag_papers_166.txt"
+    graph = parser.parseFile(jsonFile)"""
+
+    # UNCOMMENT THIS SECTION TO ACCESS EXISTING DATABASE, NO READ IN NECESSARY
+    graph = dbWriter.Graph(connectionString)
+
+    # function created for testing the markings functions.
+    # test_mark(graph)
 
 if __name__ == "__main__":
     main()
