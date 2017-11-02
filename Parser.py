@@ -132,12 +132,12 @@ def test_mark(graph):
 
 def main():
     # Connection string for Neo4j Database
-    connectionString = "bolt://10.152.38.62:7687"
+    connectionString = "bolt://127.0.0.1:7687"
 
     # UNCOMMENT THIS SECTION TO READ IN FROM FILE
-    """parser = Parser(connectionString)
+    parser = Parser(connectionString)
     jsonFile = "C:\\Users\\crosl\\OneDrive\\School\\ASU\\Fall 2017\\CSE 575\\Term Project\\Dataset\\mag_papers_166.txt"
-    graph = parser.parseFile(jsonFile)"""
+    graph = parser.parseFile(jsonFile)
 
     # UNCOMMENT THIS SECTION TO ACCESS EXISTING DATABASE, NO READ IN NECESSARY
     graph = dbWriter.Graph(connectionString)

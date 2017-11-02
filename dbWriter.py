@@ -116,6 +116,28 @@ class Graph():
         toreturn = list(response)
         return toreturn
 
+    def addPartitionLabelToNodes(self, authors:list, partitionId:str):
+        toreturn = list()
+        for author in authors:
+            response = self.addPartitionLabelToNode(author, partitionId)
+            toreturn += response
+        return toreturn
+
+    def addPartitionLabelToNode(self, author:str, partitionId:str):
+        response = self.session.run("MATCH (a:Author)"
+                                    " WHERE a.name = '" + author + "'"
+                                    " SET a.partition = '" + partitionId + "'"
+                                    " RETURN a")
+        toreturn = list(response)
+        return toreturn
+
+    def getNodesInPartition(self, partitionId:str):
+        response = self.session.run("MATCH (a:Author)"
+                                    " WHERE a.partition = '" + partitionId + "'"
+                                    " RETURN a.name")
+        toreturn = list(response)
+        return toreturn
+
     def getMarkedNodes(self, mark:str):
         response = self.session.run("MATCH (a)"
                                     " WHERE a.mark = '" + mark + "'"
