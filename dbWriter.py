@@ -172,13 +172,13 @@ class Graph():
         toreturn = toreturn[0][0]
         return toreturn
 
-    def getEdgesOffNodes(self, authors):
+    def getEdgesOffNodes(self, authors:list):
         """takes in a list of authors, returns a dictionary of author to the set of edges
         and their targets from that node."""
         toreturn = {}
         for author in authors:
             #create dictionary mapping for author
-            toreturn[author] = list()
+            toreturn[author] = dict()
 
             response = self.session.run("MATCH (a:Author)-[e:CoAuthored]-(b:Author)"
                                     " WHERE a.name = '" + author + "'"
@@ -187,10 +187,32 @@ class Graph():
             for return_item in templist:
                 edge_weight = return_item[0]
                 neighbor = return_item[1]
-                return_pair = (edge_weight, neighbor)
+                return_pair = {neighbor: edge_weight}
 
                 #append to the return for this author the pair (edge_weight, neighbor)
-                toreturn[author].append(return_pair)
+                toreturn[author][neighbor] = edge_weight
+
+        return toreturn
+
+    def getEdgesOffAllNodes(self):
+        """takes in a list of authors, returns a dictionary of author to the set of edges
+        and their targets from that node."""
+        toreturn = {}
+        for author in self.getAllAuthors():
+            #create dictionary mapping for author
+            toreturn[author] = dict()
+
+            response = self.session.run("MATCH (a:Author)-[e:CoAuthored]-(b:Author)"
+                                    " WHERE a.name = '" + author + "'"
+                                    " RETURN e.weight, b.name")
+            templist = list(response)
+            for return_item in templist:
+                edge_weight = return_item[0]
+                neighbor = return_item[1]
+                return_pair = {neighbor: edge_weight}
+
+                #append to the return for this author the pair (edge_weight, neighbor)
+                toreturn[author][neighbor] = edge_weight
 
         return toreturn
 

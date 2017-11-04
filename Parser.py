@@ -135,12 +135,14 @@ def main():
     connectionString = "bolt://127.0.0.1:7687"
 
     # UNCOMMENT THIS SECTION TO READ IN FROM FILE
-    parser = Parser(connectionString)
-    jsonFile = "C:\\Users\\crosl\\OneDrive\\School\\ASU\\Fall 2017\\CSE 575\\Term Project\\Dataset\\mag_papers_166.txt"
-    graph = parser.parseFile(jsonFile)
+    #parser = Parser(connectionString)
+    #jsonFile = "C:\\Users\\crosl\\OneDrive\\School\\ASU\\Fall 2017\\CSE 575\\Term Project\\Dataset\\mag_papers_166.txt"
+    #graph = parser.parseFile(jsonFile)
 
     # UNCOMMENT THIS SECTION TO ACCESS EXISTING DATABASE, NO READ IN NECESSARY
     graph = dbWriter.Graph(connectionString)
+    result = graph.getEdgesOffAllNodes()
+    pass
 
     # function created for testing the markings functions.
     # test_mark(graph)
