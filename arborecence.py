@@ -79,32 +79,19 @@ def mst(root, G):
     root - the root of the MST
     G - the graph in which the MST lies
     returns: a graph representation of the MST
-    Graph representation is the same as the one found at:
-    http://code.activestate.com/recipes/119466/
-    Explanation is copied verbatim here:
+
     The input graph G is assumed to have the following
     representation: A vertex can be any object that can
     be used as an index into a dictionary.  G is a
     dictionary, indexed by vertices.  For any vertex v,
     G[v] is itself a dictionary, indexed by the neighbors
     of v.  For any edge v->w, G[v][w] is the length of
-    the edge.  This is related to the representation in
-    <http://www.python.org/doc/essays/graphs.html>
-    where Guido van Rossum suggests representing graphs
-    as dictionaries mapping vertices to lists of neighbors,
-    however dictionaries of edges have many advantages
+    the edge.
+    dictionaries of edges have many advantages
     over lists: they can store extra information (here,
     the lengths), they support fast existence tests,
     and they allow easy modification of the graph by edge
-    insertion and removal.  Such modifications are not
-    needed here but are important in other graph algorithms.
-    Since dictionaries obey iterator protocol, a graph
-    represented as described here could be handed without
-    modification to an algorithm using Guido's representation.
-    Of course, G and G[v] need not be Python dict objects;
-    they can be any other object that obeys dict protocol,
-    for instance a wrapper in which vertices are URLs
-    and a call to G[v] loads the web page and finds its links.
+    insertion and removal.  
     """
 
     RG = _reverse(G)
@@ -146,17 +133,14 @@ def mst(root, G):
 if __name__ == "__main__":
 
     # an example of an input that works
-    root = 0
-    g = {0: {1: 23, 2: 22, 3: 22}, 1: {2: 1, 3: 1}, 3: {1: 1, 2: 0}}
+    root = "Himani"
+    g = {"Himani": {"Rutuja": 23, "Anjani": 22, "Ishita": 22}, "Rutuja": {"Anjani": 1, "Ishita": 1}, "Ishita": {"Rutuja": 1, "Anjani": 0}}
 
-    # an example of an input that causes infinite cycle
-    root = 0
-    g = {0: {1: 17, 2: 16, 3: 19, 4: 16, 5: 16, 6: 18}, 1: {2: 3, 3: 3, 4: 11, 5: 10, 6: 12}, 2: {1: 3, 3: 4, 4: 8, 5: 8, 6: 11}, 3: {1: 3, 2: 4, 4: 12, 5: 11, 6: 14}, 4: {1: 11, 2: 8, 3: 12, 5: 6, 6: 10}, 5: {1: 10, 2: 8, 3: 11, 4: 6, 6: 4}, 6: {1: 12, 2: 11, 3: 14, 4: 10, 5: 4}}
 
-    h = mst(int(root),g)
+    h = mst(root,g)
 
     print h
 
     for s in h:
         for t in h[s]:
-            print "%d-%d" % (s,t)
+            print "%s-%s" % (s,t)
