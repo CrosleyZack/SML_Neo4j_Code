@@ -9,7 +9,8 @@ class Parser():
     def __init__(self, connectionString = "default"):
         self.graph = dbWriter.Graph(connectionString)
 
-    def parseFile(self, filepath):
+    def parseMAGFile(self, filepath):
+        """Parses the json files from the MAG dataset"""
         with open(filepath, "r") as f:
             #track number of publications parsed
             num_publications = 0
@@ -17,7 +18,6 @@ class Parser():
             for line in f:
 
                 #parse json from line
-                timer = time.time()
                 publish_item = json.loads(line)
                 #print("   Parsed json line in ", timer - time.time())
 
@@ -32,7 +32,6 @@ class Parser():
                 #if one author is not found in graph, add them.
                 for author in coauthors:
                     #we don't need to check if this node exists because add author uses merge
-                    timer = time.time()
                     self.graph.addAuthor(author)
                     #print("   Added author to database in ", timer - time.time())
 
@@ -41,7 +40,6 @@ class Parser():
                     if i == j:
                         continue
                     else:
-                        timer = time.time()
                         self.graph.addEdge(i,j)
                         #print("   Added edge to database in ", timer - time.time())
 
@@ -52,14 +50,28 @@ class Parser():
 
         return self.graph
 
+    def parseTextFile(self, filepath):
+        """Parses file with edges defined in the form node1 node2 edge1"""
+        with open(filepath, "r") as f:
+            #track number of publications parsed
+            num_publications = 0
+
+            for line in f:
+
+                #Get the node1, node2, and edge weight
+                node1, node2, edge_weight = line.split(' ')
+                self.graph.addAuthor(node1)
+                self.graph.addAuthor(node2)
+                weight = float(edge_weight)
+                self.graph.addEdgeWithWeight(self,node1,node2,weight)
+
+        return self.graph
+
     @staticmethod
     def viewFile(filepath):
         with open(filepath) as f:
             for line in f:
                 print(line)
-
-    def resetGraph(self):
-        self.graph.clearGraph()
 
     @staticmethod
     def cleanAuthors(authors):
@@ -136,16 +148,11 @@ def main():
 
     # UNCOMMENT THIS SECTION TO READ IN FROM FILE
     #parser = Parser(connectionString)
-    #jsonFile = "C:\\Users\\crosl\\OneDrive\\School\\ASU\\Fall 2017\\CSE 575\\Term Project\\Dataset\\mag_papers_166.txt"
-    #graph = parser.parseFile(jsonFile)
+    #file = "filepath"
+    #graph = parser.parseThisFileType(file)
 
     # UNCOMMENT THIS SECTION TO ACCESS EXISTING DATABASE, NO READ IN NECESSARY
     graph = dbWriter.Graph(connectionString)
-    result = graph.getEdgesOffAllNodes()
-    pass
-
-    # function created for testing the markings functions.
-    # test_mark(graph)
 
 if __name__ == "__main__":
     main()

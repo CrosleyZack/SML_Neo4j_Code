@@ -34,14 +34,6 @@ class Graph():
                                     " RETURN edge")
         #TODO figure out better way to check edge exists
         listresult = list(response)
-        #single_response = response.single()
-        #if single_response:
-        #    single_response = single_response.get("edge")
-        #response_peek = response.peek()
-        #summary_response = response.summary()
-        #response_keys = response.keys()
-        #response_allrecords = response.records()
-        #edge_response = listresult.get("edge")
         if len(listresult) == 0:
             return False
         else:
@@ -58,8 +50,6 @@ class Graph():
         query += " WHERE a.name = '" + author1 + "' AND b.name = '" + author2 + "'"
         query += " RETURN "
 
-
-
     def getEdgeWeight(self, author1:str, author2:str):
         response = self.session.run("MATCH (a:Author)-[edge:CoAuthored]-(b:Author)"
                                     " WHERE a.name = '" + author1 + "' AND b.name = '" + author2 + "'"
@@ -70,6 +60,16 @@ class Graph():
         if weight != None:
             toreturn = weight[0]
         return toreturn
+
+    def addEdgeWithWeight(self, author1:str, author2:str, weight:int):
+        response = self.session.run(
+            "MATCH (a:Author), (b:Author)"
+            " WHERE a.name = '" + author1 + "' AND b.name = '" + author2 + "'"
+            " MERGE (a)-[edge:CoAuthored {weight:" + weight + "}]-(b)"
+            " RETURN edge")
+        # verify success and return
+        to_return = response.single()
+        return to_return
 
     def addEdge(self, author1:str, author2:str):
         #check edge exists
@@ -90,7 +90,7 @@ class Graph():
             #add edge with weight 1. Uses MERGE as CREATE doesn't support undirected relationships.
             response = self.session.run("MATCH (a:Author), (b:Author)"
                                         " WHERE a.name = '" + author1 + "' AND b.name = '" + author2 + "'"
-                                        " MERGE (a)-[edge:CoAuthored {weight: 1}]-(b)"
+                                        " MERGE (a)-[edge:CoAuthored {weight:1}]-(b)"
                                         " RETURN edge")
             #verify success and return
             to_return = response.single()
@@ -187,34 +187,16 @@ class Graph():
             for return_item in templist:
                 edge_weight = return_item[0]
                 neighbor = return_item[1]
-                return_pair = {neighbor: edge_weight}
 
                 #append to the return for this author the pair (edge_weight, neighbor)
-                toreturn[author][neighbor] = edge_weight
+                toreturn[author][neighbor] = float(edge_weight)
 
         return toreturn
 
     def getEdgesOffAllNodes(self):
         """takes in a list of authors, returns a dictionary of author to the set of edges
         and their targets from that node."""
-        toreturn = {}
-        for author in self.getAllAuthors():
-            #create dictionary mapping for author
-            toreturn[author] = dict()
-
-            response = self.session.run("MATCH (a:Author)-[e:CoAuthored]-(b:Author)"
-                                    " WHERE a.name = '" + author + "'"
-                                    " RETURN e.weight, b.name")
-            templist = list(response)
-            for return_item in templist:
-                edge_weight = return_item[0]
-                neighbor = return_item[1]
-                return_pair = {neighbor: edge_weight}
-
-                #append to the return for this author the pair (edge_weight, neighbor)
-                toreturn[author][neighbor] = edge_weight
-
-        return toreturn
+        return self.getEdgesOffNodes(self.getAllAuthors())
 
     def clearGraph(self):
         # query database for matching author
