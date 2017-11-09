@@ -32,7 +32,7 @@ V=(1:k+1)';
 [i j w] = find(D);
 E = [i j w];
 GT= edmonds(V,E);
-TREEMAX=reconstruct_2(GT);
+TREEMAX=reconstruct(GT);
 
 unodes= unique([i;j]);
 T = zeros(k+1,k+1);

@@ -29,7 +29,7 @@ W = (A'*spdiags(logdeg, 0, N, N))';
 clear A;
 
 tStart = tic;
-[markedpaths] = ShortPaths2( W, logdeg, markedset );
+[markedpaths] = ShortPaths( W, logdeg, markedset );
 tElapsed = toc(tStart)
 disp('markedpaths computed!')
 

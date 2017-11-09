@@ -1,4 +1,4 @@
-function[GTM]=reconstruct_2(ED)
+function[GTM]=reconstruct(ED)
 %% to reconstruct ED
 
 MAXI=numel(ED);
