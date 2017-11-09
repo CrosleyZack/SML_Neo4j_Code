@@ -1,13 +1,15 @@
 import json
 import dbWriter
 import itertools
-import time
-import random
+import math
 
 class Parser():
 
-    def __init__(self, connectionString = "default"):
-        self.graph = dbWriter.Graph(connectionString)
+    def __init__(self, connectionString = "default", directed=False):
+        if not directed:
+            self.graph = dbWriter.Graph(connectionString)
+        else:
+            self.graph = dbWriter.DirectedGraph(connectionString)
 
     def parseMAGFile(self, filepath):
         """Parses the json files from the MAG dataset"""
@@ -32,7 +34,7 @@ class Parser():
                 #if one author is not found in graph, add them.
                 for author in coauthors:
                     #we don't need to check if this node exists because add author uses merge
-                    self.graph.addAuthor(author)
+                    self.graph.addNode(author)
                     #print("   Added author to database in ", timer - time.time())
 
                 #add edges: For each combination of authors, add the edge. Function automatically adds one to edge if it already exists
@@ -50,7 +52,7 @@ class Parser():
 
         return self.graph
 
-    def parseTextFile(self, filepath):
+    def parseTextFileDirected(self, filepath):
         """Parses file with edges defined in the form node1 node2 edge1"""
         with open(filepath, "r") as f:
             #track number of publications parsed
@@ -60,10 +62,14 @@ class Parser():
 
                 #Get the node1, node2, and edge weight
                 node1, node2, edge_weight = line.split(' ')
-                self.graph.addAuthor(node1)
-                self.graph.addAuthor(node2)
+                self.graph.addNode(node1, )
+                self.graph.addNode(node2)
                 weight = float(edge_weight)
-                self.graph.addEdgeWithWeight(self,node1,node2,weight)
+                self.graph.addEdgeWithWeight(node1, node2, edge_weight)
+                self.graph.addEdgeWithWeight(node2, node1, edge_weight)
+
+        #Now, for each node, we calculate the weight
+        calcLogWeights(self.graph)
 
         return self.graph
 
@@ -142,17 +148,25 @@ def test_mark(graph):
 
     print[test]
 
+def calcLogWeights(graph):
+    for node in graph.getAllNodes():
+        neighbors = graph.getNeighboringNodes(node)
+        out_edges = len(neighbors)
+        weight = math.log(out_edges, 2)
+        for neighbor in neighbors:
+            graph.setEdgeWeight(node, neighbor, weight)
+
 def main():
     # Connection string for Neo4j Database
     connectionString = "bolt://127.0.0.1:7687"
 
     # UNCOMMENT THIS SECTION TO READ IN FROM FILE
-    #parser = Parser(connectionString)
-    #file = "filepath"
-    #graph = parser.parseThisFileType(file)
+    parser = Parser(connectionString, True)
+    file = "C:\\Users\\crosl\\OneDrive\\School\\ASU\\Fall 2017\\CSE 575\\Term Project\\Dataset\\toytest3.txt"
+    graph = parser.parseTextFileDirected(file)
 
     # UNCOMMENT THIS SECTION TO ACCESS EXISTING DATABASE, NO READ IN NECESSARY
-    graph = dbWriter.Graph(connectionString)
+    # graph = dbWriter.Graph(connectionString)
 
 if __name__ == "__main__":
     main()
