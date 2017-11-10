@@ -369,7 +369,7 @@ class DirectedGraph():
 
     def setEdgeWeight(self, source_node:str, dest_node:str, weight:float, edge_type="default"):
         """Returns a neo4j response object. Safe to assume if NOT null or empty that the operation was successful"""
-        response = self.session.run("MATCH (a)-[edge:" + edge_type + "]-(b)"
+        response = self.session.run("MATCH (a)-[edge:" + edge_type + "]->(b)"
                                     " WHERE a.name = '" + source_node + "' AND b.name = '" + dest_node + "'"
                                     " SET edge.weight = " + str(weight) +
                                     " RETURN edge")

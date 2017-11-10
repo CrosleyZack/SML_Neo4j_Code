@@ -62,7 +62,7 @@ class Parser():
 
                 #Get the node1, node2, and edge weight
                 node1, node2, edge_weight = line.split(' ')
-                self.graph.addNode(node1, )
+                self.graph.addNode(node1)
                 self.graph.addNode(node2)
                 weight = float(edge_weight)
                 self.graph.addEdgeWithWeight(node1, node2, edge_weight)
@@ -162,7 +162,7 @@ def main():
 
     # UNCOMMENT THIS SECTION TO READ IN FROM FILE
     parser = Parser(connectionString, True)
-    file = "C:\\Users\\crosl\\OneDrive\\School\\ASU\\Fall 2017\\CSE 575\\Term Project\\Dataset\\toytest3.txt"
+    file = "gridtest.txt"
     graph = parser.parseTextFileDirected(file)
 
     # UNCOMMENT THIS SECTION TO ACCESS EXISTING DATABASE, NO READ IN NECESSARY
