@@ -1,5 +1,6 @@
 from neo4j.v1 import GraphDatabase, basic_auth
 import random
+import math
 
 class Graph():
 
@@ -219,6 +220,8 @@ class Graph():
         and their targets from that node."""
         return self.getEdgesOffNodes(self.getAllAuthors())
 
+
+
     def clearGraph(self):
         # query database for matching author
         response = self.session.run("MATCH (n)"
@@ -294,7 +297,6 @@ class DirectedGraph():
         """Returns a two layer dictionary that:
              1. passed in a graph node returns a dictionary where the keys are the nodes neighbors]
              2. passing in a nodes neighbor returns the weight of that edge
-
              For example, suppose we have a two node graph with nodes 1 and 2 with edge of weight 1 from 1 to 2.
              This function will return a dictionary d such that d[1] = {2: 1}"""
         toreturn = {}
@@ -302,23 +304,26 @@ class DirectedGraph():
             #create dictionary mapping for author
             toreturn[node] = dict()
 
-            response = self.session.run("MATCH (a:)-[e:" + edge_type + "]-(b)"
+            response = self.session.run("MATCH (a)-[e:" + edge_type + "]-(b)"
                                         " WHERE a.name = '" + node + "'"
                                         " RETURN e.weight, b.name")
             templist = list(response)
+            w = math.log((self.getNumberOfNeighbors(node) + 1),2)
             for return_item in templist:
-                edge_weight = return_item[0]
-                neighbor = return_item[1]
+                if w == return_item[0]:
+                    edge_weight = return_item[0]
+                    neighbor = return_item[1]
 
-                #append to the return for this author the pair (edge_weight, neighbor)
-                toreturn[node][neighbor] = float(edge_weight)
+                    #append to the return for this author the pair (edge_weight, neighbor)
+                    toreturn[node][neighbor] = float(edge_weight)
 
         return toreturn
 
     def getEdgesOffAllNodes(self):
         """takes in a list of authors, returns a dictionary of author to the set of edges
         and their targets from that node."""
-        return self.getEdgesOffNodes(self.getAllAuthors())
+        # return self.getEdgesOffNodes(self.getAllAuthors())
+        return self.getEdgesOffNodes(self.getAllNodes())
 
     # ------------------ Edge Management Code ---------------------
 
@@ -444,7 +449,8 @@ class DirectedGraph():
 
     def getRandomNodes(self, count:int):
         """Returns list of strings corresponding to nodes in the graph"""
-        node_list = self.getAllAuthors()
+        #node_list = self.getAllAuthors()
+        node_list = self.getAllNodes()
         # by default we return None to indicate that the command couldn't be executed
         toreturn = None
         # if the list of authors is sufficiently long, get count random items

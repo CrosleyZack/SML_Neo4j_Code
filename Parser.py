@@ -152,7 +152,7 @@ def calcLogWeights(graph):
     for node in graph.getAllNodes():
         neighbors = graph.getNeighboringNodes(node)
         out_edges = len(neighbors)
-        weight = math.log(out_edges, 2)
+        weight = math.log(out_edges+1, 2)
         for neighbor in neighbors:
             graph.setEdgeWeight(node, neighbor, weight)
 
@@ -170,3 +170,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+     #file = "/Users/rutujafaldu/Desktop/Dot2Dot_12_tbox/toytest.txt"
