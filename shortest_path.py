@@ -1,6 +1,6 @@
 import dbWriter
 import math
-import numpy
+import FindMST
 
 #############################################
 class MarkedPath:
@@ -9,15 +9,7 @@ class MarkedPath:
         self.source = source
         self.cost = cost
         self.path = path
-    
-    def getSource(self):
-        return self.source
-    
-    def getCost(self):
-        return self.cost
-    
-    def getPath(self):
-        return self.path
+
 #############################################
 
 
@@ -40,14 +32,11 @@ def findMST(markedPaths, markedSet, graphDB):
     SP = [[0 for j in range(k+1)] for i in range(k+1)]
     N = graphDB.getAllNodes().__len__()
     for i in range(0,k):
-        SP[k][i] = math.log(N,2)
-    # for i in range(0,k+1):
-    #     print(SP[i])
+        SP[i][k] = math.log(N,2)
     for i in range(0,k):
         if(markedPaths.get(markedSet[i])):
             paths = markedPaths.get(markedSet[i])
             paths = sorted(paths, key=lambda p: p.cost)
-            #uniqueNodes = list(set([nodes.source for nodes in paths]))
             uniqueNodes = []
             uniquePathObjects = []
             for path in paths:
@@ -55,18 +44,35 @@ def findMST(markedPaths, markedSet, graphDB):
                     continue
                 uniqueNodes.append(path.source)
                 uniquePathObjects.append(path)
+            print("\nUnique values of Key "+markedSet[i]+": ")
             for u in uniquePathObjects:
                 print(u.source, u.cost, u.path)
             
-            # storing the cost in SP matrix
+            #storing the cost in SP matrix
             for j in range(0,uniquePathObjects.__len__()):
                 ind = markedSet.index(uniquePathObjects[j].source)
                 SP[ind][i] = uniquePathObjects[j].cost
 
-print("\n")
-
+print("\n\n")
+print("SP matrix: \n")
 for i in range(0,k+1):
     print(SP[i])
+    
+    g = FindMST.Graph(k+1)
+    for i in range(0,k+1):
+        for j in range(0,k+1):
+            if SP[j][i] > 0:
+                g.addEdge(i,j,SP[j][i])
+
+result = g.KruskalMST()
+TreeMIN = [[0 for j in range(k+1)] for i in range(k+1)]
+for u,v,weight in result:
+    TreeMIN[u][v] = weight
+    
+    print("\n\n")
+    print("MST matrix: \n")
+    for i in range(0,k+1):
+        print(TreeMIN[i])
 
 
 ###################################################################################
@@ -74,14 +80,6 @@ for i in range(0,k+1):
 def main():
     graphDb = dbWriter.DirectedGraph("bolt://127.0.0.1:7687")
     nodes = graphDb.getAllNodes()
-    # g = graphDb.getNeighboringNodes("3")
-    #print(g1)
-    #g = graphDb.getEdgesOffNodes(['1'])
-    #g = graphDb.getEdgesOffAllNodes()
-    # g2 = graphDb.markNodes(graphDb.getRandomNodes(8),"mark")
-    # print(g2)
-    # g = graphDb.getMarkedNodes("mark")
-    # print(g)
     #graphDb.clearGraph();
     
     terminals = ['14','15','20','23','25','27','29','38'];
@@ -93,7 +91,7 @@ def main():
     markedPaths = dict()
     for i in range(0,terminals.__len__()):
         
-        hops = 0;
+        hops = 0
         seed = terminals[i]
         costSeed = lengths[int(seed)-1]
         hops = hops + costSeed
@@ -145,12 +143,13 @@ while(hops <= maxLength):
             costs[:] = [x - minCost for x in costs]
             hops = hops + minCost
 
+print("Marked Paths:")
 for k,v in markedPaths.items():
     print("Key:" + k)
     for v1 in v:
         print(v1.source, v1.cost, v1.path)
 
-    print("\n");
+    print("\n")
 
 findMST(markedPaths,terminals,graphDb)
 
@@ -158,4 +157,3 @@ findMST(markedPaths,terminals,graphDb)
 
 if __name__ == "__main__":
     main()
-
