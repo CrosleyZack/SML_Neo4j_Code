@@ -84,7 +84,7 @@ expandedtreenodes = unique(expandedtreenodes);
      
  end
 % return expanded min-tree nodes
-expandedtreenodes = markedset';
+expandedtreenodes = markedset2';
 expandedtreenodes = [expandedtreenodes; src; dst];
 expandedtreenodes = unique(expandedtreenodes);
 
@@ -97,13 +97,13 @@ L2(1:LENEXP, 1:LENEXP) = (PMIN(expandedtreenodes,expandedtreenodes));
 L2(LENEXP+1, 1:LENEXP) = 100;
 
 % log2N link to unmarked nodes only
-[int a b] = intersect(expandedtreenodes,markedset);
+[int a b] = intersect(expandedtreenodes,markedset2);
 L2(LENEXP+1, a) = log2(N);
 
 
  if(isvis)
      %save('L2.mat','L2')
-     [int a b] = intersect(expandedtreenodes,markedset);
+     [int a b] = intersect(expandedtreenodes,[markedset markedset2]);
 	
      bg=visGraph(PMIN(expandedtreenodes,expandedtreenodes), expandedtreenodes, a, 1, 1);
      bg.view;
