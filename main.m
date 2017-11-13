@@ -54,7 +54,7 @@ tElapsed = toc(tStart)
 disp('markedpaths 2 computed!')
 
 tStart = tic;
-[SP, TREEMIN, trash, roots] = findMST2(markedpaths2 ,markedset, markedset2, SP, TREEMIN); % TREEMIN is kxk where k = |markedset|
+[SP, TREEMIN, trash, roots] = findMST3(markedpaths2 ,markedset, markedset2, SP, TREEMIN); % TREEMIN is kxk where k = |markedset|
 tMSTelapsed = toc(tStart)
 
 [trash, PMIN, trash, trash, cost] = expandPathsAll(SP, TREEMIN, markedpaths2, [markedset markedset2], [markedset markedset2], W, 1);
