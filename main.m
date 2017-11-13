@@ -36,7 +36,7 @@ tStart = tic;
 [SP, TREEMIN, trash, roots] = findMST(markedpaths, markedset); % TREEMIN is kxk where k = |markedset|
 tMSTelapsed = toc(tStart)
 
-[trash, PMIN, trash, trash, cost] = expandPathsAll(SP, TREEMIN, markedpaths, markedset, markedset, W, 1);
+[P, PMIN ,uallnodes ,expandedtreenodes ,cost] = expandPathsAll(SP, TREEMIN, markedpaths, markedset, markedset, W, 1);
 
 PMIN
 fprintf('Cost-alg from MST TREE is %f \n', cost+length(roots)*log2(N));
@@ -47,16 +47,15 @@ fprintf('Cost-act from MST TREE is %f \n', cost);
 tree = [src dst];
 dlmwrite('tree-arb.txt',tree,'delimiter',' ','precision','%6.0f');
 pause
-bioc
 tStart = tic;
 [markedpaths2] = ShortPaths2( W, logdeg, markedset2, markedpaths );
 tElapsed = toc(tStart)
 disp('markedpaths 2 computed!')
 
 tStart = tic;
-[SP, TREEMIN, trash, roots] = findMST3(markedpaths2 ,markedset, markedset2, SP, TREEMIN); % TREEMIN is kxk where k = |markedset|
+[SP, TREEMIN, trash, roots] = findMST2(markedpaths2 ,markedset, markedset2, SP, TREEMIN); % TREEMIN is kxk where k = |markedset|
 tMSTelapsed = toc(tStart)
 
-[trash, PMIN, trash, trash, cost] = expandPathsAll(SP, TREEMIN, markedpaths2, [markedset markedset2], [markedset markedset2], W, 1);
+[P, PMIN, uallnodes ,expandedtreenodes, cost] = expandPathsAll2(PMIN, TREEMIN, markedpaths2, [markedset markedset2], markedset, markedset2, W, 1);
 
 pause

@@ -1,4 +1,4 @@
-function [P PMIN uallnodes expandedtreenodes cost] = expandPathsAll(SP, TREEMIN, markedpaths, treenodes, markedset, W, isvis)
+function [P PMIN uallnodes expandedtreenodes cost] = expandPathsAll2(PMIN, TREEMIN, markedpaths, treenodes, markedset,markedset2, W, isvis)
 %----------------------------------------------------------------
 % expand paths all ----------------------------------------------
 %----------------------------------------------------------------
@@ -9,21 +9,20 @@ function [P PMIN uallnodes expandedtreenodes cost] = expandPathsAll(SP, TREEMIN,
 % PMIN: NxN expanded TREEMIN
 % expandedtreenodes: nodes in PMIN (expanded TREEMIN)
 
-k = length(markedset);
+k = length(markedset2);
 N = size(W,1);
 P = sparse(N,N);
 
-allnodes = markedset;
+allnodes = markedset2;
 
 src = []; dst = [];
 [from to trash] = find(TREEMIN);
 from = treenodes(from);
 to = treenodes(to);
 
-PMIN = sparse(N,N);
 for i=1:length(to)
     reverse = false;
-    if(isempty(find(markedset == from(i))))
+    if(isempty(find(markedset2 == from(i))))
         temp = from(i);
         from(i) = to(i);
         to(i) = temp;
@@ -46,7 +45,7 @@ for i=1:length(to)
             P(sp(j+1),sp(j)) = W(sp(j+1),sp(j)); 
             PMIN(sp(j+1),sp(j)) = W(sp(j+1),sp(j));
             if(PMIN(sp(j),sp(j+1)) ~= 0) % loop
-                if(length(find(markedset==sp(j))) == 0)
+                if(length(find(markedset2==sp(j))) == 0)
                     PMIN(sp(j),sp(j+1)) = 0;
                 else
                     PMIN(sp(j+1),sp(j)) = 0;
@@ -58,7 +57,7 @@ for i=1:length(to)
             P(sp(j),sp(j+1)) = W(sp(j),sp(j+1)); 
             PMIN(sp(j),sp(j+1)) = W(sp(j),sp(j+1)); 
             if(PMIN(sp(j+1),sp(j)) ~= 0) % loop
-                if(length(find(markedset==sp(j+1))) == 0)
+                if(length(find(markedset2==sp(j+1))) == 0)
                     PMIN(sp(j+1),sp(j)) = 0;
                 else
                     PMIN(sp(j),sp(j+1)) = 0;
@@ -72,13 +71,13 @@ end
 
 
 % return expanded min-tree nodes
-expandedtreenodes = markedset';
+expandedtreenodes = markedset2';
 expandedtreenodes = [expandedtreenodes; src; dst];
 expandedtreenodes = unique(expandedtreenodes);
 
  if(isvis)
      %save('L2.mat','L2')
-     [int a b] = intersect(expandedtreenodes,markedset);
+     [int a b] = intersect(expandedtreenodes,[markedset markedset2]);
 	
      bg=visGraph(PMIN(expandedtreenodes,expandedtreenodes), expandedtreenodes, a, 1, 1);
      bg.view;
