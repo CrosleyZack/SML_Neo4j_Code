@@ -1,4 +1,4 @@
-function [markedpaths] = ShortPaths( W, logdeg, markedset )
+function [markedpaths] = ShortPaths2( W, logdeg, markedset,markedpaths )
 
 % similar to ShortPaths, but also stores the paths to unmarked vertices
 % from marked vertices, i.e. markedpaths is larger
@@ -24,13 +24,11 @@ N = size(W,1);
 marked = sparse(N,1);
 marked(markedset) = 1;
 
-markedpaths = cell(N,1); 
-
 MAXLEN = log2(N)*TIMES;
 
 for i=1:length(markedset)
     
-    %tic
+    %tics
     hops=0;
     seed = markedset(i);
     costseed = logdeg(seed);
@@ -140,7 +138,4 @@ function paths = add_markedpath (path0, id, ...
     
     return
 end
-
-
 end
-

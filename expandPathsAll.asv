@@ -168,4 +168,26 @@ cost = full(sum(sum(PMIN)));
 
 uallnodes = unique(allnodes);
 
+
+if(isvis)
+    cgsize = length(uallnodes)
+    if(cgsize<100) % visualize
+        [int a b] = intersect(uallnodes,markedset);
+        bg = visGraph(P(uallnodes,uallnodes), uallnodes, a,1,1);
+        [src dst w] = find(PMIN);
+        % mark the edges
+        for i=1:length(src)
+            %['Node',' ',num2str(src(ind(i)))]
+            %['Node',' ',num2str(dst(ind(i)))]
+            h=getedgesbynodeid(bg,num2str(src(i)),num2str(dst(i)));
+            set(h,'LineColor',[0 0 1]);
+            set(h,'LineWidth',2);
+        end
+        bg.view;
+    else
+        [int a b] = intersect(expandedtreenodes,markedset);
+        bg = visGraph(PMIN(expandedtreenodes,expandedtreenodes), expandedtreenodes, a,1,1);
+        bg.view;
+    end
+end
 end
