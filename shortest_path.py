@@ -244,7 +244,6 @@ def dynamic_nodes(mst,new_marked_set,marked_set,lengths,vert,markedPaths):
             ids.append(neighs[j])
             costs.append(lengths[int(neighs[j]) - 1])
             paths.append(path)
-            addMarkedPath(markedPaths, neighs[j], seed, hops, path)
 
         minCost = min(costs)
         costs[:] = [x - minCost for x in costs]
@@ -271,18 +270,29 @@ def dynamic_nodes(mst,new_marked_set,marked_set,lengths,vert,markedPaths):
                         ids.append(neighs[k])
                         costs.append(lengths[int(neighs[k]) - 1])
                         paths.append(path)
-                        addMarkedPath(markedPaths, neighs[k], seed, hops, path)
 
             ids = [z for x, z in enumerate(ids) if x not in ind]
             costs = [z for x, z in enumerate(costs) if x not in ind]
             paths = [z for x, z in enumerate(paths) if x not in ind]
-
+            #print (paths)
             minCost = min(costs)
             costs[:] = [x - minCost for x in costs]
             hops = hops + minCost
-            k = marked_set.__len__()
-            new_paths=markedPaths.get(new_marked_set[i])
-            graph = [[0 for j in range(k)] for i in range(k)]
+        reqpath=[];
+        k = len(vert) + 1
+        graph = [[0 for j in range(k)] for i in range(k)]
+        g = FindMST.Graph(k)
+        for i in range(0, k - 1):
+            for j in range(0, k - 1):
+                if mst[i][j] == 1:
+                    g.addEdge(i, j, mst[i][j])
+        for path in paths:
+            for vertex in path:
+                if vertex in vert:
+                    g.addEdge(vert.index(vertex), k - 1, 1)
+                    reqpath.append(path)
+
+        print (reqpath)
 
     return mst,vert
 def main():
@@ -291,7 +301,7 @@ def main():
     #graphDb.clearGraph();
 
     terminals = ['14','15','20','23','25','27','29','38'];
-    new_marked_set=['35','31']
+    new_marked_set=['40','31']
     lengths = [0]* nodes.__len__()
     for i in graphDb.getAllNodes():
         lengths[int(i)-1] = math.log((graphDb.getNumberOfNeighbors(i)+1),2)
