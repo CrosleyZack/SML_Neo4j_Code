@@ -140,9 +140,8 @@ def find_expanded_paths(graph_paths, TreeMIN, vertices, number_of_nodes):
     pprint(result)
     for u, v, weight in result:
         mst[u][v] = weight
-
     pprint(mst)
-
+    return mst,vert
 
 def dynamic_incrementation(mst, new_marked_nodes, original_marked_nodes, lengths, original_marked_paths, vertices):
     print("\n\nVertices:", type(vertices))
@@ -223,13 +222,76 @@ def dynamic_incrementation(mst, new_marked_nodes, original_marked_nodes, lengths
 
     find_expanded_paths(minimum_paths, [], vertices, 0)
 
+def dynamic_nodes(mst,new_marked_set,marked_set,lengths,vert,markedPaths):
+    graphDb = dbWriter.DirectedGraph("bolt://127.0.0.1:7687")
+    nodes = graphDb.getAllNodes()
+    maxLength = math.log((nodes.__len__()), 2)
 
+    for i in range(0, new_marked_set.__len__()):
+
+        hops = 0
+        seed = new_marked_set[i]
+        costSeed = lengths[int(seed) - 1]
+        hops = hops + costSeed
+
+        ids = []
+        costs = []
+        paths = []
+
+        neighs = graphDb.getNeighboringNodes(seed)
+        for j in range(0, neighs.__len__()):
+            path = [seed, neighs[j]]
+            ids.append(neighs[j])
+            costs.append(lengths[int(neighs[j]) - 1])
+            paths.append(path)
+            addMarkedPath(markedPaths, neighs[j], seed, hops, path)
+
+        minCost = min(costs)
+        costs[:] = [x - minCost for x in costs]
+        hops = hops + minCost
+
+        while (hops <= maxLength):
+            ind = [index for index, value in enumerate(costs) if value == 0]
+            for j in range(0, ind.__len__()):
+                expandNode = ids[ind[j]]
+                neighs = graphDb.getNeighboringNodes(expandNode)
+
+                for k in range(0, neighs.__len__()):
+                    path = paths[ind[j]]
+
+                    temp = [index for index, value in enumerate(path) if value == neighs[k]]
+                    if (temp.__len__() > 0):
+                        continue
+                    else:
+                        path1 = []
+                        for p in range(0, path.__len__()):
+                            path1.append(path[p])
+                        path1.append(neighs[k])
+                        path = path1
+                        ids.append(neighs[k])
+                        costs.append(lengths[int(neighs[k]) - 1])
+                        paths.append(path)
+                        addMarkedPath(markedPaths, neighs[k], seed, hops, path)
+
+            ids = [z for x, z in enumerate(ids) if x not in ind]
+            costs = [z for x, z in enumerate(costs) if x not in ind]
+            paths = [z for x, z in enumerate(paths) if x not in ind]
+
+            minCost = min(costs)
+            costs[:] = [x - minCost for x in costs]
+            hops = hops + minCost
+            k = marked_set.__len__()
+            new_paths=markedPaths.get(new_marked_set[i])
+            graph = [[0 for j in range(k)] for i in range(k)]
+
+    return mst,vert
 def main():
     graphDb = dbWriter.DirectedGraph("bolt://127.0.0.1:7687")
     nodes = graphDb.getAllNodes()
     #graphDb.clearGraph();
 
     terminals = ['14','15','20','23','25','27','29','38'];
+    new_marked_set=['35','31']
     lengths = [0]* nodes.__len__()
     for i in graphDb.getAllNodes():
         lengths[int(i)-1] = math.log((graphDb.getNumberOfNeighbors(i)+1),2)
@@ -300,9 +362,9 @@ def main():
 
     minimum_paths, TreeMin, vertices = findMST(markedPaths, terminals, graphDb, maxLength)
 
-    # find_expanded_paths(minimum_paths, TreeMin, vertices, 40)
-
-    dynamic_incrementation([10,20,30], ['16', '10', '18'], terminals, lengths, markedPaths, vertices)
+    mst,vert = find_expanded_paths(minimum_paths, TreeMin, vertices, 40)
+    mst,vert = dynamic_nodes(mst,new_marked_set,terminals,lengths,vert,markedPaths)
+    #dynamic_incrementation([10,20,30], ['16', '10', '18'], terminals, lengths, markedPaths, vertices)
 
     #############################################################################
 
