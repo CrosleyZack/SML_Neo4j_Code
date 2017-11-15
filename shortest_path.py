@@ -113,7 +113,7 @@ def findMST(markedPaths, markedSet, graphDB, maxLength):
 
 ###################################################################################
 
-def find_expanded_paths(graph_paths, TreeMIN, vertices, number_of_nodes):
+def find_expanded_paths(graph_paths, TreeMIN, vertices, graphDb):
     vert = sorted(list(vertices))
     k = len(vert)
     graph = [[0 for j in range(k)] for i in range(k)]
@@ -124,14 +124,18 @@ def find_expanded_paths(graph_paths, TreeMIN, vertices, number_of_nodes):
             count +=1
             column = vert.index(graph_paths[i][j])
             row = vert.index(graph_paths[i][j+1])
-            graph[row][column] = 1
+            if row == 0:
+                graph[row][column] = 5.32
+            else:
+                graph[row][column] = math.log((graphDb.getNumberOfNeighbors(vert[row])+1), 2)
             print(vert[row], vert[column])
-
+    print("Hello")
+    pprint(graph)
     g = FindMST.Graph(k)
 
     for i in range(0, k):
         for j in range(0, k):
-            if graph[i][j] == 1:
+            if graph[i][j] > 0:
                 g.addEdge(i, j, graph[i][j])
 
     result = g.KruskalMST()
@@ -225,7 +229,7 @@ def dynamic_nodes(mst,new_marked_set,marked_set,lengths,vert,markedPaths):
     graphDb = dbWriter.DirectedGraph("bolt://127.0.0.1:7687")
     nodes = graphDb.getAllNodes()
     maxLength = math.log((nodes.__len__()), 2)
-
+    cost_of_graph = 0
     for i in range(0, new_marked_set.__len__()):
         nid = new_marked_set[i];
         hops = 0
@@ -282,25 +286,30 @@ def dynamic_nodes(mst,new_marked_set,marked_set,lengths,vert,markedPaths):
 
         k = len(vert)+1
         graph = [[0 for j in range(k)] for i in range(k)]
+        print("MST")
+        pprint(mst)
+        print(k)
         g = FindMST.Graph(k)
         for i in range(0, k-1):
             for j in range(0, k-1):
-                if mst[i][j] == 1:
+                if mst[i][j] > 0:
                     g.addEdge(i, j, mst[i][j])
 
-        newpaths=markedPaths.get(nid);
+        newpaths=markedPaths.get(nid)
 
         for route in newpaths:
             path=route.path
             for vertex in path:
                 if vertex in vert:
-                    g.addEdge(vert.index(vertex), k-1, route.cost)
+                    g.addEdge(vert.index(vertex), k-1, math.log((graphDb.getNumberOfNeighbors(vertex)+1), 2))
         unmarked_set=list(set(vert)-set(marked_set))
         result = g.KruskalMST()
         mst = [[0 for j in range(k)] for i in range(k)]
         pprint(result)
         for u, v, weight in result:
-                mst[u][v] = weight
+            if weight != 5.32:
+                cost_of_graph += weight
+            mst[u][v] = weight
 
         for u in unmarked_set:
             count=0
@@ -312,6 +321,7 @@ def dynamic_nodes(mst,new_marked_set,marked_set,lengths,vert,markedPaths):
                 print (u)
         vert.append(nid)
         pprint(mst)
+        print("cost", cost_of_graph)
     return mst,vert
 
 def main():
@@ -319,8 +329,8 @@ def main():
     nodes = graphDb.getAllNodes()
     #graphDb.clearGraph();
 
-    terminals = ['14','15','20','23','25','27','29','38'];
-    new_marked_set=['21','36']
+    terminals = ['21','15','20','23','25','27','29','38'];
+    new_marked_set=['14','36','17']
     lengths = [0]* nodes.__len__()
     for i in graphDb.getAllNodes():
         lengths[int(i)-1] = math.log((graphDb.getNumberOfNeighbors(i)+1),2)
@@ -391,7 +401,7 @@ def main():
 
     minimum_paths, TreeMin, vertices = findMST(markedPaths, terminals, graphDb, maxLength)
 
-    mst,vert = find_expanded_paths(minimum_paths, TreeMin, vertices, 40)
+    mst,vert = find_expanded_paths(minimum_paths, TreeMin, vertices, graphDb)
     mst,vert = dynamic_nodes(mst,new_marked_set,terminals,lengths,vert,markedPaths)
     #dynamic_incrementation([10,20,30], ['16', '10', '18'], terminals, lengths, markedPaths, vertices)
 
