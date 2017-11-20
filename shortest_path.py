@@ -18,6 +18,9 @@ def addMarkedPath(markedPaths, id, source, cost, path):
     markedPathObj = MarkedPath(source, cost, path)
     if markedPaths.get(id):
         value = markedPaths.get(id)
+        for mpath in value:
+            if mpath.path == path:
+                return
         value.append(markedPathObj)
         markedPaths[id] = value
     else:
@@ -146,90 +149,12 @@ def find_expanded_paths(graph_paths, TreeMIN, vertices, graphDb):
     pprint(mst)
     return mst,vert
 
-def dynamic_incrementation(mst, new_marked_nodes, original_marked_nodes, lengths, original_marked_paths, vertices):
-    print("\n\nVertices:", type(vertices))
-    graphDb = dbWriter.DirectedGraph("bolt://127.0.0.1:7687")
-    nodes = graphDb.getAllNodes()
-    maxLength = math.log((nodes.__len__()),2)
-
-
-    terminals = new_marked_nodes
-    markedPaths = dict()
-    for i in range(0,terminals.__len__()):
-
-        hops = 0
-        seed = terminals[i]
-        costSeed = lengths[int(seed)-1]
-        hops = hops + costSeed
-
-        ids = []
-        costs = []
-        paths = []
-
-        neighs = graphDb.getNeighboringNodes(seed)
-        for j in range(0,neighs.__len__()):
-            path = [seed,neighs[j]]
-            ids.append(neighs[j])
-            costs.append(lengths[int(neighs[j])-1])
-            paths.append(path)
-            addMarkedPath(markedPaths, neighs[j], seed, hops, path)
-
-        minCost = min(costs)
-        costs[:] = [x - minCost for x in costs]
-        hops = hops + minCost
-
-        while(hops <= maxLength):
-            ind = [index for index, value in enumerate(costs) if value == 0]
-            for j in range(0,ind.__len__()):
-                expandNode = ids[ind[j]]
-                neighs = graphDb.getNeighboringNodes(expandNode)
-
-                for k in range(0,neighs.__len__()):
-                    path = paths[ind[j]]
-
-                    temp = [index for index, value in enumerate(path) if value == neighs[k]]
-                    if(temp.__len__()>0):
-                        continue
-                    else:
-                        path1 = []
-                        for p in range(0, path.__len__()):
-                            path1.append(path[p])
-                        path1.append(neighs[k])
-                        path = path1
-                        ids.append(neighs[k])
-                        costs.append(lengths[int(neighs[k])-1])
-                        paths.append(path)
-                        addMarkedPath(markedPaths,neighs[k],seed,hops,path)
-
-            ids = [z for x,z in enumerate(ids) if x not in ind]
-            costs = [z for x,z in enumerate(costs) if x not in ind]
-            paths = [z for x,z in enumerate(paths) if x not in ind]
-
-            minCost = min(costs)
-            costs[:] = [x - minCost for x in costs]
-            hops = hops + minCost
-
-    print("Marked Paths:")
-    new_marked_paths = original_marked_paths
-    new_marked_set = sorted(list(vertices) + new_marked_nodes)
-    new_marked_set = new_marked_set[1:len(new_marked_set)]
-    print(new_marked_set)
-    for x in markedPaths:
-        if x not in original_marked_paths:
-            new_marked_paths[x] = []
-        for p in markedPaths[x]:
-            new_marked_paths[x].append(p)
-
-    minimum_paths, TreeMin, vertices = findMST(new_marked_paths, new_marked_set, graphDb, maxLength)
-    pprint(minimum_paths)
-
-    find_expanded_paths(minimum_paths, [], vertices, 0)
-
 def dynamic_nodes(mst,new_marked_set,marked_set,lengths,vert,markedPaths):
     graphDb = dbWriter.DirectedGraph("bolt://127.0.0.1:7687")
     nodes = graphDb.getAllNodes()
     maxLength = math.log((nodes.__len__()), 2)
     cost_of_graph = 0
+    unmarked = list(set(vert) - set(marked_set))
     for i in range(0, new_marked_set.__len__()):
         nid = new_marked_set[i];
         hops = 0
@@ -243,7 +168,7 @@ def dynamic_nodes(mst,new_marked_set,marked_set,lengths,vert,markedPaths):
 
         neighs = graphDb.getNeighboringNodes(seed)
         for j in range(0, neighs.__len__()):
-            path = [seed, neighs[j]]
+            path = [ neighs[j] ,seed]
             ids.append(neighs[j])
             costs.append(lengths[int(neighs[j]) - 1])
             paths.append(path)
@@ -269,7 +194,7 @@ def dynamic_nodes(mst,new_marked_set,marked_set,lengths,vert,markedPaths):
                         path1 = []
                         for p in range(0, path.__len__()):
                             path1.append(path[p])
-                        path1.append(neighs[k])
+                        path1.insert(0,neighs[k])
                         path = path1
                         ids.append(neighs[k])
                         costs.append(lengths[int(neighs[k]) - 1])
@@ -285,41 +210,66 @@ def dynamic_nodes(mst,new_marked_set,marked_set,lengths,vert,markedPaths):
             hops = hops + minCost
 
         k = len(vert)+1
-        graph = [[0 for j in range(k)] for i in range(k)]
-        print("MST")
-        pprint(mst)
-        print(k)
-        g = FindMST.Graph(k)
-        for i in range(0, k-1):
-            for j in range(0, k-1):
-                if mst[i][j] > 0:
-                    g.addEdge(i, j, mst[i][j])
-
         newpaths=markedPaths.get(nid)
-
+        edgelist=[]
+        expand_set=[]
         for route in newpaths:
             path=route.path
-            for vertex in path:
-                if vertex in vert:
-                    g.addEdge(vert.index(vertex), k-1, math.log((graphDb.getNumberOfNeighbors(vertex)+1), 2))
-        unmarked_set=list(set(vert)-set(marked_set))
-        result = g.KruskalMST()
-        mst = [[0 for j in range(k)] for i in range(k)]
+            path.pop()
+            intersect= list(set(path) & set(vert))
+            if len(intersect)==1 and len(path)==1 :
+                edgelist.append([vert.index(intersect[0]), k - 1, math.log((graphDb.getNumberOfNeighbors(intersect[0]) + 1), 2)])
+            elif len(intersect)==2:
+                umarked= list(set(intersect)& set(unmarked))
+                marked = list(set(intersect) & set(marked_set))
+                if len(umarked)==1:
+                    edgelist.append([vert.index(umarked[0]), k - 1, math.log((graphDb.getNumberOfNeighbors(umarked[0]) + 1), 2)])
+                elif len(marked)==1:
+                    edgelist.append([vert.index(marked[0]), k - 1, math.log((graphDb.getNumberOfNeighbors(marked[0]) + 1), 2)])
+            elif path[0] in vert:
+                    if path[1] not in expand_set:
+                        expand_set.append(path[1])
+                    edgelist.append([k+expand_set.index(path[1]), k - 1, math.log((graphDb.getNumberOfNeighbors(path[1]) + 1), 2)])
+                    edgelist.append([vert.index(path[0]), k + expand_set.index(path[1]), math.log((graphDb.getNumberOfNeighbors(path[0]) + 1), 2)])
+
+        print(edgelist, expand_set)
+        h = len(vert) + 1 + len(expand_set)
+        print("MST")
+        pprint(mst)
+        print(h)
+        d = FindMST.Graph(h)
+        for i in range(0, k - 1):
+            for j in range(0, k - 1):
+                if mst[i][j] > 0:
+                    d.addEdge(i, j, mst[i][j])
+        for u,v,w in edgelist:
+            d.addEdge(u,v,w)
+        result = d.KruskalMST()
+        mst = [[0 for j in range(h)] for i in range(h)]
         pprint(result)
         for u, v, weight in result:
             if weight != 5.32:
                 cost_of_graph += weight
             mst[u][v] = weight
 
-        for u in unmarked_set:
-            count=0
-            for v in range(len(vert)):
-                if mst[int(vert.index(u))][v]>0 or mst[v][int(vert.index(u))]>0:
-                    count=count+1
-            print(u)
-            if count<2:
-                print (u)
         vert.append(nid)
+        for ele in expand_set:
+            vert.append(ele)
+            unmarked.append(ele)
+        marked_set.append(nid)
+        for u in unmarked:
+            count = 0
+            for v in range(len(vert)):
+                if mst[int(vert.index(u))][v] > 0 or mst[v][int(vert.index(u))] > 0:
+                    count = count + 1
+            if count < 2:
+                print("PSSSSS")
+                uind = int(vert.index(u))
+                for v in range(len(vert)):
+                    mst[v].pop(uind)
+                mst.pop(uind)
+                vert.remove(u)
+                unmarked.remove(u)
         pprint(mst)
         print("cost", cost_of_graph)
     return mst,vert
@@ -329,8 +279,8 @@ def main():
     nodes = graphDb.getAllNodes()
     #graphDb.clearGraph();
 
-    terminals = ['21','15','20','23','25','27','29','38'];
-    new_marked_set=['14','36','17']
+    terminals = ['21','36','23','25','27','29','38'];
+    new_marked_set=['30','22','28']
     lengths = [0]* nodes.__len__()
     for i in graphDb.getAllNodes():
         lengths[int(i)-1] = math.log((graphDb.getNumberOfNeighbors(i)+1),2)
@@ -403,8 +353,6 @@ def main():
 
     mst,vert = find_expanded_paths(minimum_paths, TreeMin, vertices, graphDb)
     mst,vert = dynamic_nodes(mst,new_marked_set,terminals,lengths,vert,markedPaths)
-    #dynamic_incrementation([10,20,30], ['16', '10', '18'], terminals, lengths, markedPaths, vertices)
-
     #############################################################################
 
 if __name__ == "__main__":
