@@ -287,8 +287,8 @@ def dynamic_nodes(mst,new_marked_set,marked_set,lengths,vert,markedPaths):
         for i in range(h):
             for j in range(h):
                 if mst[i][j]>0:
-                    print (nids[i],nids[j],1)
-                    cost=cost+math.log((graphDb.getNumberOfNeighbors(nids[i]) + 1), 2)
+                    print (nids[i],nids[j],mst[i][j])
+                    cost=cost+mst[i][j]
         print("cost", cost)
         print (marked_set)
         print(vert)
@@ -298,8 +298,8 @@ def main():
     graphDb = dbWriter.DirectedGraph("bolt://127.0.0.1:7687")
     nodes = graphDb.getAllNodes()
     #graphDb.clearGraph();
-    terminals = ['17','30','19'];
-    new_marked_set=['21','36','28']
+    terminals = ['17','30','19','36','37','20','28','6'];
+    new_marked_set=['21','29']
     lengths = [0]* nodes.__len__()
     for i in graphDb.getAllNodes():
         lengths[int(i)-1] = math.log((graphDb.getNumberOfNeighbors(i)+1),2)
