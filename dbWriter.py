@@ -40,6 +40,19 @@ class Graph():
         else:
             return True
 
+    def updateNodeClass(self, node:str, newclass:str, oldclass="default"):
+        response = self.session.run("MATCH (a:" + oldclass + ") "
+                                    " WHERE a.name = '" + node + "'"
+                                    " REMOVE a:" + oldclass + " "
+                                    " SET a:" + newclass + " "
+                                    " RETURN a")
+        # find a in response
+        listresult = list(response)
+        if len(listresult) == 0:
+            return False
+        else:
+            return True
+
     def connectedWithNLeaps(self, node1:str, node2:str, count:int, connectionType:str):
         """Finds the nodes through which node a and b can be connected
             with exactly N leaps (N edges, N-1 Nodes).of a specified
@@ -62,18 +75,18 @@ class Graph():
             toreturn = weight[0]
         return toreturn
 
-    def addEdgeWithWeight(self, node1:str, node2:str, weight:float):
+    def addEdgeWithWeight(self, node1:str, node2:str, weight:float, relationship = "Author"):
         """Creates an edge """
         response = self.session.run(
             "MATCH (a:" + self.node_class + "), (b:" + self.node_class + ")"
             " WHERE a.name = '" + node1 + "' AND b.name = '" + node2 + "'"
-            " MERGE (a)-[edge:" + self.node_relationship + " {weight:" + weight + "}]-(b)"
+            " MERGE (a)-[edge:" + relationship + " {weight:" + str(weight) + "}]-(b)"
             " RETURN edge")
         # verify success and return
         to_return = response.single()
         return to_return
 
-    def addEdge(self, node1:str, node2:str):
+    def addEdge(self, node1:str, node2:str, node_type = "Author", edge_type = "CoAuthored"):
         """Creates an undirected edge between node1 and node2. Edge weight is incremented by one from previous edge weight
             or is initialized to one if no prior edge existed."""
         #check edge exists
@@ -83,7 +96,7 @@ class Graph():
             new_edge_weight = int(edge_weight) + 1 #adds one to weight
             #set new weight property
             response = self.session.run(
-                "MATCH (a:" + self.node_class + ")-[edge:" + self.node_relationship + "]-(b:" + self.node_class +")"
+                "MATCH (a:" + node_type + ")-[edge:" + edge_type + "]-(b:" + node_type +")"
                 " WHERE a.name = '" + node1 + "' AND b.name = '" + node2 + "'"
                 " SET edge.weight = '" + str(new_edge_weight) + "'"
                 " RETURN edge")
@@ -92,18 +105,25 @@ class Graph():
             return to_return
         else:
             #add edge with weight 1. Uses MERGE as CREATE doesn't support undirected relationships.
-            response = self.session.run("MATCH (a:" + self.node_class + "), (b:" + self.node_class + ")"
+            response = self.session.run("MATCH (a:" + node_type + "), (b:" + node_type + ")"
                                         " WHERE a.name = '" + node1 + "' AND b.name = '" + node2 + "'"
-                                        " MERGE (a)-[edge:" + self.node_relationship + " {weight:1}]-(b)"
+                                        " MERGE (a)-[edge:" + edge_type + " {weight:1}]-(b)"
                                         " RETURN edge")
             #verify success and return
             to_return = response.single()
             return to_return
 
+    def addEdgeUnlabeled(self, node1:str, node2:str, node_type = "default"):
+        response = self.session.run("MATCH (a:" + node_type + "), (b:" + self.node_type + ")"
+                                        " WHERE a.name = '" + node1 + "' AND b.name = '" + node2 + "'"
+                                        " MERGE (a)-[edge:I]-(b)"
+                                        " RETURN edge")
+        return response
+
     """REPLACES ADD AUTHOR"""
-    def addNode(self, node: str):
+    def addNode(self, node: str, node_type = "Author"):
         #add using a merge. This means that if the node already exists, it will simply be returned.
-        response = self.session.run("MERGE(a:" + self.node_class + " {name: '" + node + "'})"
+        response = self.session.run("MERGE(a:" + node_type + " {name: '" + node + "'})"
                                     " RETURN a")
         listresult = list(response)
         return listresult[0]
@@ -236,8 +256,6 @@ class Graph():
         return toreturn
 
 
-
-
 class DirectedGraph():
 
     def __init__(self, connectionString="default"):
@@ -251,6 +269,19 @@ class DirectedGraph():
         """ Returns boolean indicating if that node exists in the database """
         response = self.session.run("MATCH (a:" + node_type + ") "
                                     " WHERE a.name = '" + node + "'"
+                                    " RETURN a")
+        # find a in response
+        listresult = list(response)
+        if len(listresult) == 0:
+            return False
+        else:
+            return True
+
+    def updateNodeClass(self, node:str, newclass:str, oldclass="default"):
+        response = self.session.run("MATCH (a:" + oldclass + ") "
+                                    " WHERE a.name = '" + node + "'"
+                                    " REMOVE a:" + oldclass + " "
+                                    " SET a:" + newclass + " "
                                     " RETURN a")
         # find a in response
         listresult = list(response)
@@ -275,6 +306,14 @@ class DirectedGraph():
                                     " ORDER BY a.name")
         toreturn = list(response)
         toreturn = [x[0] for x in toreturn]
+        return toreturn
+
+    def deleteNode(self, node):
+        """ returns true if successful"""
+        response = self.session.run("MATCH (a)"
+                                    " WHERE a.name = '" + node + "'"
+                                    " DETACH DELETE a")
+        toreturn = list(response)
         return toreturn
 
     # ----------------- Node-Edge Combo Functions -----------------------
@@ -361,7 +400,7 @@ class DirectedGraph():
         response = self.session.run(
             "MATCH (a), (b)"
             " WHERE a.name = '" + source_node + "' AND b.name = '" + dest_node + "'"
-            " MERGE (a)-[edge:" + edge_type + " {weight:" + weight + "}]->(b)"
+            " MERGE (a)-[edge:" + edge_type + " {weight:" + str(weight) + "}]->(b)"
             " RETURN edge")
         # verify success and return
         to_return = response.single()
