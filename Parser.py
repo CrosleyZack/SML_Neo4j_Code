@@ -95,24 +95,19 @@ class Parser():
 
         return self.graph
 
-    def parseTextFileWithWeightDirected(self, filepath):
+    def parseTextFileWithWeightDirected(self, filepath, node_type="default"):
         """Parses file with edges defined in the form node1 node2 edge1"""
         with open(filepath, "r") as f:
             #track number of publications parsed
             num_publications = 0
 
             for line in f:
-
                 #Get the node1, node2, and edge weight
                 node1, node2, edge_weight = line.split(' ')
-                self.graph.addNode(node1)
-                self.graph.addNode(node2)
+                self.graph.addNode(node1,node_type)
+                self.graph.addNode(node2,node_type)
                 weight = float(edge_weight)
                 self.graph.addEdgeWithWeight(node1, node2, edge_weight)
-                self.graph.addEdgeWithWeight(node2, node1, edge_weight)
-
-        #Now, for each node, we calculate the weight
-        calcLogWeights(self.graph)
 
         return self.graph
 
@@ -292,17 +287,29 @@ def calcLogWeights(graph):
 
 def main():
 
-    # Preset for AMAZON DATASET
-    # NOTE - Remember to delete first four header lines of file
-
     # Connection string for Neo4j Database
-    connectionString = "bolt://10.152.114.20:7687"
-    # Amazon Amazon0302.txt filepath here
-    filePath = "C:\\Users\\crosl\\OneDrive\\School\\ASU\\Fall 2017\\CSE 575\\Term Project\\Dataset\\Amazon0302.txt"
+    connectionString = "bolt://127.0.0.1:7687"
+    # file path to file here
+    filePath = "C:\\Users\\crosl\\OneDrive\\School\\ASU\\Fall 2017\\CSE 575\\Term Project\\Dataset\\finalData.txt"
 
-    parser = Parser(connectionString, False)
-    #Specify how many edges you want to read in
-    graph = parser.parseTextFileDirected(filePath, delimeter="\t", edge_limit=100)
+    # default node type
+    node_class = "default"
+
+    # Parse file
+    parser = Parser(connectionString, True)
+    graph = parser.parseTextFileWithWeightDirected(filePath, node_class)
+
+    # change colors of marked and new marked
+    marked_set = ['217', '56', '21', '34', '134', '142', '786', '283', '452', '154', '217', '663', '146', '534', '54',
+                  '225', '67', '421', '623', '247']
+    new_marked_set = ['45', '23', '156', '276', '790', '254', '184', '273', '283', '712']
+
+    for node in marked_set:
+        graph.updateNodeClass(node=node, oldclass=node_class, newclass="marked")
+    for node in new_marked_set:
+        graph.updateNodeClass(node=node, oldclass=node_class, newclass="new_marked")
+        graph.deleteNode(node)
+
     print("Complete")
 
 
