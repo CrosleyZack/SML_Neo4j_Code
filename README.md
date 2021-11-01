@@ -1,6 +1,8 @@
 # SML_Neo4j_Code
 The code for the neo4j graph database for the statistical machine learning (CSE 575) class.
 
+This code was used for the paper Mining Associations in Large Graphs for Dynamically Incremented Marked Nodes (https://link.springer.com/chapter/10.1007/978-3-319-96136-1_4)
+
 # Using the code
 There are a few steps that must be done before the code can be run. This is to add libraries for Neo4j and the program to run the database
   on localhost
